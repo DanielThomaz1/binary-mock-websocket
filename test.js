@@ -1,0 +1,21 @@
+var CustomApi = require('binary-common-utils/CustomApi');
+var observer = require('binary-common-utils/observer');
+var expect = require('chai').expect;
+var Mock = require('./dist/websocket');
+
+describe('Try to authorize with invalid token', function(){
+	var api;
+	var response;
+	before(function(done){
+		api = new CustomApi(Mock);
+		observer.registerOnce('api.error', function(_response){
+			response = _response;
+			done();
+		});
+		api.authorize('FakeToken');
+	});
+	it('Authorize should fail', function(){
+		expect(response).to.have.property('code')
+			.that.is.equal('InvalidToken');
+	});
+});

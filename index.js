@@ -21,7 +21,7 @@ module.exports = function() {
 				});
 			})
 			.pipe(function(done){
-				var data = fs.readFileSync('./websocket.js');
+				var data = fs.readFileSync(__dirname + '/websocket.js');
 				throughObj.push(new File({
 					cwd: __dirname,
 					base: __dirname,

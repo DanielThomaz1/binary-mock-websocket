@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run build && mocha test.js",
-    "build": "gulp"
+    "build": "gulp",
+    "patch": "npm test && npm version patch && npm publish"
   },
   "repository": {
     "type": "git",

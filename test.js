@@ -1,4 +1,4 @@
-var CustomApi = require('binary-common-utils/CustomApi');
+var CustomApi = require('binary-common-utils/customApi');
 var observer = require('binary-common-utils/observer');
 var expect = require('chai').expect;
 var Mock = require('./dist/websocket');

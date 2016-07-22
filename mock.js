@@ -1,3 +1,4 @@
+'use strict';
 var LiveApi = require('binary-live-api').LiveApi;
 var Observer = require('binary-common-utils/observer');
 var tools = require('binary-common-utils/tools');

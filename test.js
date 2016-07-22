@@ -1,3 +1,4 @@
+'use strict';
 var CustomApi = require('binary-common-utils/customApi');
 var Observer = require('binary-common-utils/observer');
 var expect = require('chai').expect;

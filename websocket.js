@@ -1,4 +1,5 @@
 /*jshint loopfunc: true */
+'use strict';
 var tools = require('binary-common-utils/tools');
 var WS = require('ws');
 var _ = require('underscore');

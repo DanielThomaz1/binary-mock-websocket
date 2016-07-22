@@ -1,3 +1,4 @@
+'use strict';
 var File = require('vinyl');
 var through = require('through2');
 var fs = require('fs');

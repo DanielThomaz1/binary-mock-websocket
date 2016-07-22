@@ -4,7 +4,7 @@
   "description": "Websocket mock creator for binary applications",
   "main": "index.js",
   "scripts": {
-    "test": "npm run build && mocha test.js",
+    "test": "npm run build && mocha -r binary-common-utils/mochaHelper test.js",
     "build": "gulp",
     "patch": "npm test && npm version patch && npm publish"
   },
@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/aminmarashi/binary-mock-websocket#readme",
   "dependencies": {
-    "binary-common-utils": "^1.0.23",
+    "binary-common-utils": "^1.0.28",
     "binary-live-api": "^20.2.0",
     "gulp-file": "^0.3.0",
     "through2": "^2.0.1",
@@ -27,8 +27,15 @@
     "ws": "^1.1.1"
   },
   "devDependencies": {
+    "app-module-path": "^1.1.0",
+    "babel-core": "^6.11.4",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-register": "^6.9.0",
     "chai": "^3.5.0",
     "gulp": "^3.9.1",
-    "mocha": "^2.5.3"
+    "jsdom": "^9.4.1",
+    "jsdom-global": "^2.0.0",
+    "mocha": "^2.5.3",
+    "xmldom": "^0.1.22"
   }
 }

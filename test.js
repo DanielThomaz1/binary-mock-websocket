@@ -1,8 +1,9 @@
 var CustomApi = require('binary-common-utils/customApi');
-var observer = require('binary-common-utils/observer');
+var Observer = require('binary-common-utils/observer');
 var expect = require('chai').expect;
 var Mock = require('./dist/websocket');
 
+var observer = new Observer();
 describe('Try to authorize with invalid token', function(){
 	var api;
 	var response;

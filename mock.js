@@ -1,8 +1,9 @@
 var LiveApi = require('binary-live-api').LiveApi;
-var observer = require('binary-common-utils/observer');
+var Observer = require('binary-common-utils/observer');
 var tools = require('binary-common-utils/tools');
 var _ = require('underscore');
 
+var observer = new Observer();
 var Mock = function Mock(callFile){
 	this.calls = require(callFile);
 	this.global = {};

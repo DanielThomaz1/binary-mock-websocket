@@ -34,7 +34,7 @@ Mock.prototype = Object.create(null, {
 			var that = this;
 			return new Promise(function(resolve, reject){
 				that.iterateCalls(that.calls, that.responseDatabase, function(){
-					resolve("module.exports = " + JSON.stringify(that.responseDatabase).replace("'", "\\'") + ';'); 
+					resolve("'use strict';\nmodule.exports = " + JSON.stringify(that.responseDatabase).replace("'", "\\'") + ';'); 
 				});
 			});
 		}

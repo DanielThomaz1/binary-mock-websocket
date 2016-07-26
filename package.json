@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/aminmarashi/binary-mock-websocket#readme",
   "dependencies": {
-    "binary-common-utils": "^1.0.31",
+    "binary-common-utils": "^1.0.32",
     "binary-live-api": "^20.3.0",
     "gulp-file": "^0.3.0",
     "through2": "^2.0.1",

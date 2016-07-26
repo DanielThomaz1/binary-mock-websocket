@@ -23,8 +23,7 @@
     "binary-live-api": "^20.2.0",
     "gulp-file": "^0.3.0",
     "through2": "^2.0.1",
-    "underscore": "^1.8.3",
-    "ws": "^1.1.1"
+    "underscore": "^1.8.3"
   },
   "devDependencies": {
     "babel-core": "^6.11.4",

@@ -40,7 +40,7 @@
   "peerDependencies": {
     "ws": "^1.1.1",
     "underscore": "^1.8.3",
-    "binary-common-utils": "^1.0.37",
-    "binary-live-api": "^20.4.0"
+    "binary-common-utils": "~1.0.38",
+    "binary-live-api": "~20.4.0"
   }
 }

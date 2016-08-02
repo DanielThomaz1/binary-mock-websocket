@@ -10,10 +10,10 @@ describe('Try to authorize with invalid token', function(){
 	var response;
 	before(function(done){
 		api = new CustomApi(Mock);
-		observer.registerOnce('api.error', function(_response){
+		observer.register('api.error', function(_response){
 			response = _response;
 			done();
-		});
+		}, true);
 		api.authorize('FakeToken');
 	});
 	it('Authorize should fail', function(){

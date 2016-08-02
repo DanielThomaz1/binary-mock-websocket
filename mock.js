@@ -147,12 +147,12 @@ Mock.prototype = Object.create(null, {
 						console.log(optionName);
 						if (responseTypeName === 'subscriptions') {
 							if ( callName === 'history' ) {
-								observer.registerOnce('data.history', function(data){
+								observer.register('data.history', function(data){
 									that.handleDataSharing(data);
 									responseDatabase[callName][responseTypeName][that.getKeyFromRequest(data)] = {
 										data: [data]
 									};
-								});
+								}, true);
 								observer.register('data.tick', function(data){
 									that.observeSubscriptions(data, responseDatabase, option, callback);
 								});
@@ -162,7 +162,7 @@ Mock.prototype = Object.create(null, {
 								});
 							}
 						} else {
-							observer.registerOnce('data.' + callName, function(data){
+							observer.register('data.' + callName, function(data){
 								that.handleDataSharing(data);
 								var key = that.getKeyFromRequest(data);
 								var responseData = responseDatabase[callName][responseTypeName][key] = {
@@ -171,7 +171,7 @@ Mock.prototype = Object.create(null, {
 								callback = that.wrapCallback(option, responseData, 
 									callback);
 								callback();
-							});
+							}, true);
 						}
 					}, function(){
 						callback();

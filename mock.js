@@ -15,13 +15,19 @@ var Mock = function Mock(callFile){
 	var that = this;
 	this.api.send = function send(json){
 		var reqId = Math.floor(Math.random() * 1e15);
-		that.requestList[reqId] = json;
-		return that.api.sendRaw.call(that.api, _.extend({
+		that.requestList[reqId] = _.extend({
 			req_id: reqId
-		}, json));
+		}, json);
+		return that.api.sendRaw.call(that.api, _.clone(that.requestList[reqId]));
 	};
 	this.api.socket._events.message = function onMessage(rawData, flags){
 		var data = JSON.parse(rawData);
+		if ( !that.requestList.hasOwnProperty(data.req_id) ) {
+			originalOnMessage(rawData, flags);
+			return;
+		}
+		console.log(that.requestList[data.req_id]);
+		data.echo_req = that.requestList[data.req_id];
 		that.replaceSensitiveData(data);
 		observer.emit('data.'+data.msg_type, data);
 		originalOnMessage(rawData, flags);
@@ -87,6 +93,11 @@ Mock.prototype = Object.create(null, {
 			return JSON.stringify(this.requestList[data.req_id]);
 		}
 	},
+	deleteKeyFromRequests: {
+		value: function deleteKeyFromRequests(data) {
+			delete this.requestList[data.req_id];
+		}
+	},
 	observeSubscriptions: {
 		value: function observeSubscriptions(data, responseDatabase, option, callback){
 			var key = this.getKeyFromRequest(data);
@@ -105,6 +116,7 @@ Mock.prototype = Object.create(null, {
 				option
 			);
 			if ( finished ) {
+				this.deleteKeyFromRequests(data);
 				observer.unregisterAll('data.' + data.msg_type);
 				callback = this.wrapCallback(option, responseData, callback);
 				callback();
@@ -165,6 +177,7 @@ Mock.prototype = Object.create(null, {
 							observer.register('data.' + callName, function(data){
 								that.handleDataSharing(data);
 								var key = that.getKeyFromRequest(data);
+								that.deleteKeyFromRequests(data);
 								var responseData = responseDatabase[callName][responseTypeName][key] = {
 									data: data
 								};

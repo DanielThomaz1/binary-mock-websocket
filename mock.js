@@ -26,7 +26,6 @@ var Mock = function Mock(callFile){
 			originalOnMessage(rawData, flags);
 			return;
 		}
-		console.log(that.requestList[data.req_id]);
 		data.echo_req = that.requestList[data.req_id];
 		that.replaceSensitiveData(data);
 		observer.emit('data.'+data.msg_type, data);

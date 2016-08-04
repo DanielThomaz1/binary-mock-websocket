@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run build && mocha -r binary-common-utils/mochaHelper test.js",
     "build": "gulp",
-    "patch": "npm test && npm version patch && npm publish"
+    "publish-latest": "npm test && npm version from-git && npm publish"
   },
   "repository": {
     "type": "git",

@@ -17,7 +17,7 @@ describe('Try to authorize with invalid token', function(){
 		api.authorize('FakeToken');
 	});
 	it('Authorize should fail', function(){
-		expect(response).to.have.deep.property('.error.code')
+		expect(response).to.have.deep.property('.code')
 			.that.is.equal('InvalidToken');
 	});
 });

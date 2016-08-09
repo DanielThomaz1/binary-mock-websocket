@@ -28,7 +28,7 @@
     "babel-core": "^6.11.4",
     "babel-preset-es2015": "^6.9.0",
     "babel-register": "^6.11.6",
-    "binary-common-utils": "~1.2.0",
+    "binary-common-utils": "~1.3.0",
     "binary-live-api": "20.4.0",
     "chai": "^3.5.0",
     "gulp": "^3.9.1",
@@ -40,7 +40,7 @@
   "peerDependencies": {
     "ws": "^1.1.1",
     "underscore": "^1.8.3",
-    "binary-common-utils": "~1.2.0",
+    "binary-common-utils": "~1.3.0",
     "binary-live-api": "20.4.0"
   }
 }

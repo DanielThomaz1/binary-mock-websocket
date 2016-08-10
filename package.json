@@ -25,22 +25,22 @@
   "devDependencies": {
     "ws": "^1.1.1",
     "underscore": "^1.8.3",
-    "babel-core": "^6.11.4",
-    "babel-preset-es2015": "^6.9.0",
+    "babel-core": "^6.13.2",
+    "babel-preset-es2015": "^6.13.2",
     "babel-register": "^6.11.6",
-    "binary-common-utils": "~1.3.0",
-    "binary-live-api": "20.4.0",
+    "binary-common-utils": "~1.3.2",
+    "binary-live-api": "20.5.0",
     "chai": "^3.5.0",
     "gulp": "^3.9.1",
     "jsdom": "^9.4.1",
     "jsdom-global": "^2.0.0",
-    "mocha": "^3.0.0",
+    "mocha": "^3.0.2",
     "xmldom": "^0.1.22"
   },
   "peerDependencies": {
     "ws": "^1.1.1",
     "underscore": "^1.8.3",
-    "binary-common-utils": "~1.3.0",
-    "binary-live-api": "20.4.0"
+    "binary-common-utils": "~1.3.2",
+    "binary-live-api": "20.5.0"
   }
 }

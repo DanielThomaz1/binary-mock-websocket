@@ -122,21 +122,46 @@ WebSocket.prototype = Object.create(null, {
 						if ( responseData ) {
 							foundResponse = true;
 							if ( data.subscribe ) {
-								(function(responseData){
-									tools.asyncForEach(responseData.data, function(_responseData, index, done){
-										setTimeout(function(){
-											if ( that.readyState === 0 ) {
-												return;
+								if ( responseData.data[0].msg_type === 'history' ) {
+									setTimeout(function(){
+										onmessage(JSON.stringify(responseData.data[0]));
+									}, that.delay);
+									that.time = 0;
+									setInterval(function(){
+										that.time += 2;
+										var newData = {};
+										for (var key in responseData.data[1]) {
+											if ( key === 'tick' ) {
+												newData.tick = {};
+												for ( var key2 in responseData.data[1].tick ) {
+													newData.tick[key] = responseData.data[1].tick[key];
+												}
+											} else {
+												newData[key] = responseData.data[1][key];
 											}
-											if (index === 0 && !_.isEmpty(responseData.next)) {
-												that.addToResponseBuffer(responseData.next);
-											}
-											_responseData.echo_req.req_id = _responseData.req_id = data.req_id;
-											onmessage(JSON.stringify(_responseData));
-											done();
-										}, that.delay);
-									});
-								})(responseData);
+										}
+										newData.tick.epoch = (+responseData.data[1].tick.epoch+that.time).toString();
+										newData.tick.quote = (Number(responseData.data[1].tick.quote) + Number((0.5 - Math.random()).toFixed(2))).toString();
+										newData.echo_req.req_id = newData.req_id = responseData.data[1].req_id;
+										onmessage(JSON.stringify(newData));
+									}, that.delay);
+								} else {
+									(function(responseData){
+										tools.asyncForEach(responseData.data, function(_responseData, index, done){
+											setTimeout(function(){
+												if ( that.readyState === 0 ) {
+													return;
+												}
+												if (index === 0 && !_.isEmpty(responseData.next)) {
+													that.addToResponseBuffer(responseData.next);
+												}
+												_responseData.echo_req.req_id = _responseData.req_id = data.req_id;
+												onmessage(JSON.stringify(_responseData));
+												done();
+											}, that.delay);
+										});
+									})(responseData);
+								}
 							} else {
 								(function(responseData){
 									setTimeout(function(){

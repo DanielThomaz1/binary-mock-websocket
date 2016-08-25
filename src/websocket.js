@@ -39,7 +39,7 @@ export default class WebSocket {
     }
     if (!messageSuccess) {
       this.queuedRequest.push({
-        reqData,
+				req: reqData,
         onmessage,
       });
     }

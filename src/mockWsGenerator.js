@@ -42,7 +42,7 @@ export default class MockWsGenerator {
     return 'module.exports = ' + JSON.stringify(this.api.socket.respDatabase).replace("'", "\\'") + ';';
   }
   async iterateCalls(calls, respDatabase) {
-    for (let callName of Object.keys(this.calls)) {
+    for (let callName of Object.keys(calls)) {
       let callResTypes = calls[callName];
       for (let callResTypeName of Object.keys(callResTypes)) {
         let callDefs = callResTypes[callResTypeName];
@@ -70,16 +70,17 @@ export default class MockWsGenerator {
             let data = (await observer.register('data.' + callName)).data;
             this.handleDataSharing(data);
             let key = this.getKeyFromReq(data);
-            respDatabase[callName][callResTypeName][key] = {
+            let reqDef = respDatabase[callName][callResTypeName][key] = {
               data,
             };
+						await this.iterateNext(callDef, reqDef);
           }
         }
       }
     }
 		return;
   }
-  async observeSubscriptions(event, respDatabase, option) {
+  async observeSubscriptions(event, respDatabase, callDef) {
     let promise = await observer.register(event);
     let forever = true;
     while (forever) {
@@ -95,18 +96,25 @@ export default class MockWsGenerator {
       }
       let reqDef = resps[key];
       this.handleDataSharing(data);
-      let finished = this.handleSubscriptionLimits(data, reqDef.data, option);
+      let finished = this.handleSubscriptionLimits(data, reqDef.data, callDef);
       if (finished) {
         delete this.reqRespMap[data.req_id];
+				await this.iterateNext(callDef, reqDef);
         break;
       } else {
         promise = resp.next;
       }
     }
   }
-  handleSubscriptionLimits(data, defData, option) {
+	async iterateNext(callDef, reqDef) {
+		if (callDef.next) {
+			reqDef.next = {};
+			await this.iterateCalls(callDef.next, reqDef.next);
+		}
+	}
+  handleSubscriptionLimits(data, defData, callDef) {
     defData.push(data);
-    if (defData.length === option.maxResponse || (option.stopCondition && option.stopCondition(data))) {
+    if (defData.length === callDef.maxResponse || (callDef.stopCondition && callDef.stopCondition(data))) {
       return true;
     }
     return false;

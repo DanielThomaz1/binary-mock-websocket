@@ -53,7 +53,8 @@ export default class MockWsGenerator {
         for (let callDefName of Object.keys(callDefs)) {
           let callDef = callDefs[callDefName];
           callDef.func(this.api, this.sharedContext);
-          console.log(callDefName);
+					let logger = console;
+					logger.log(callDefName);
           if (callResTypeName === 'subscriptions') {
             if (callName === 'history') {
               let data = (await observer.register('data.history')).data;

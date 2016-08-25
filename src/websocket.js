@@ -1,8 +1,3 @@
-/*jshint loopfunc: true */
-'use strict';
-var tools = require('binary-common-utils/tools');
-var _ = require('underscore');
-
 var WebSocket = function WebSocket(url) {
 	this.delay = 10;
 	this.bufferedResponse = [];

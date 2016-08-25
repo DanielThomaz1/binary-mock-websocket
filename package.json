@@ -2,9 +2,18 @@
   "name": "binary-mock-websocket",
   "version": "1.4.0",
   "description": "Websocket mock creator for binary applications",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-0"
+    ],
+    "plugins": [
+      "transform-async-to-generator"
+    ]
+  },
   "scripts": {
-    "test": "npm run build && mocha -r binary-common-utils/mochaHelper test.js",
+    "test": "npm run build && ./node_modules/.bin/babel-node ./node_modules/.bin/_mocha --compilers js:babel-core/register -r binary-common-utils/lib/mochaHelper test.js",
     "build": "gulp",
     "publish-latest": "npm test && npm version from-git && npm publish"
   },
@@ -23,24 +32,33 @@
     "through2": "^2.0.1"
   },
   "devDependencies": {
-    "ws": "^1.1.1",
-    "underscore": "^1.8.3",
+    "babel-cli": "^6.11.4",
     "babel-core": "^6.13.2",
+    "babel-eslint": "^6.1.2",
+    "babel-plugin-transform-async-to-generator": "^6.8.0",
+    "babel-polyfill": "^6.13.0",
     "babel-preset-es2015": "^6.13.2",
+    "babel-preset-stage-0": "^6.5.0",
     "babel-register": "^6.11.6",
-    "binary-common-utils": "^1.5.0",
+    "binary-common-utils": "^2.3.0",
     "binary-live-api": "20.5.4",
     "chai": "^3.5.0",
+    "eslint": "^3.3.1",
+    "eslint-config-airbnb-base": "^5.0.3",
+    "eslint-plugin-import": "^1.14.0",
     "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
     "jsdom": "^9.4.2",
     "jsdom-global": "^2.0.0",
     "mocha": "^3.0.2",
+    "webpack": "^1.13.2",
+    "ws": "^1.1.1",
     "xmldom": "^0.1.22"
   },
   "peerDependencies": {
     "ws": "^1.1.1",
     "underscore": "^1.8.3",
-    "binary-common-utils": "^1.5.0",
+    "binary-common-utils": "^2.3.0",
     "binary-live-api": ">= 20.5.0"
   }
 }

@@ -45,7 +45,7 @@ export default class WebSocket {
     }
   }
   async passMessageOn(reqData, respData, onmessage) {
-    if (respData.subscribe) {
+    if (reqData.subscribe) {
       for (let rd of respData.data) {
         await this.delayedOnMessage(reqData, rd, onmessage, respData.next);
       }

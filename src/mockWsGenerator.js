@@ -57,7 +57,7 @@ export default class MockWsGenerator {
 					logger.log(callDefName);
           if (callResTypeName === 'subscriptions') {
             if (callName === 'history') {
-              let data = (await observer.register('data.history')).data;
+              let data = await new Promise((r) => observer.register('data.history', r, true));
               this.handleDataSharing(data);
               respDatabase[callName][callResTypeName][this.getKeyFromReq(data)] = {
                 data: [data],
@@ -67,7 +67,7 @@ export default class MockWsGenerator {
               await this.observeSubscriptions('data.' + callName, respDatabase, callDef);
             }
           } else {
-            let data = (await observer.register('data.' + callName)).data;
+            let data = await new Promise((r) => observer.register('data.' + callName, r, true));
             this.handleDataSharing(data);
             let key = this.getKeyFromReq(data);
             let reqDef = respDatabase[callName][callResTypeName][key] = {
@@ -81,30 +81,27 @@ export default class MockWsGenerator {
 		return;
   }
   async observeSubscriptions(event, respDatabase, callDef) {
-    let promise = await observer.register(event);
-    let forever = true;
-    while (forever) {
-      let resp = await promise;
-      let data = resp.data;
-      let key = this.getKeyFromReq(data);
-      let messageType = (data.msg_type === 'tick') ? 'history' : data.msg_type;
-      let resps = respDatabase[messageType].subscriptions;
-      if (!(key in resps)) {
-        resps[key] = {
-          data: [],
-        };
-      }
-      let reqDef = resps[key];
-      this.handleDataSharing(data);
-      let finished = this.handleSubscriptionLimits(data, reqDef.data, callDef);
-      if (finished) {
-        delete this.reqRespMap[data.req_id];
-				await this.iterateNext(callDef, reqDef);
-        break;
-      } else {
-        promise = resp.next;
-      }
-    }
+    let reqDef = await new Promise((r) => {
+      observer.register(event, (resp) => {
+        let data = resp;
+        let key = this.getKeyFromReq(data);
+        let messageType = (data.msg_type === 'tick') ? 'history' : data.msg_type;
+        let resps = respDatabase[messageType].subscriptions;
+        if (!(key in resps)) {
+          resps[key] = {
+            data: [],
+          };
+        }
+        let rd = resps[key];
+        this.handleDataSharing(data);
+        let finished = this.handleSubscriptionLimits(data, rd.data, callDef);
+        if (finished) {
+          delete this.reqRespMap[data.req_id];
+          r(rd);
+        }
+      });
+    });
+    await this.iterateNext(callDef, reqDef);
   }
 	async iterateNext(callDef, reqDef) {
 		if (callDef.next) {

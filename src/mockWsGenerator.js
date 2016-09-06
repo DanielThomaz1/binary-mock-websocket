@@ -82,7 +82,7 @@ export default class MockWsGenerator {
   }
   async observeSubscriptions(event, respDatabase, callDef) {
     let reqDef = await new Promise((r) => {
-      observer.register(event, (resp) => {
+      let listener = (resp) => {
         let data = resp;
         let key = this.getKeyFromReq(data);
         let messageType = (data.msg_type === 'tick') ? 'history' : data.msg_type;
@@ -96,10 +96,12 @@ export default class MockWsGenerator {
         this.handleDataSharing(data);
         let finished = this.handleSubscriptionLimits(data, rd.data, callDef);
         if (finished) {
+          observer.unregister(event, listener);
           delete this.reqRespMap[data.req_id];
           r(rd);
         }
-      });
+      };
+      observer.register(event, listener);
     });
     await this.iterateNext(callDef, reqDef);
   }

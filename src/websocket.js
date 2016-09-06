@@ -1,4 +1,4 @@
-import dumpedDb from './database';
+import dumpedDb from './database'; // eslint-disable-line import/no-unresolved
 
 export default class WebSocket {
   constructor(url) {
@@ -19,10 +19,13 @@ export default class WebSocket {
     }, this.delay * 10);
   }
   getResponse(reqData, onmessage) {
-    this.handleForget(reqData, onmessage);
-    let database = this.getResponseFromBuffer(reqData);
-    database = (!this.isEmpty(database)) ? database : dumpedDb;
-    this.parseDb(database, reqData, onmessage);
+    if ('forget_all' in reqData || ('subscribe' in reqData && reqData.subscribe === 0)) {
+      this.handleForget(reqData, onmessage);
+    } else {
+      let database = this.getResponseFromBuffer(reqData);
+      database = (!this.isEmpty(database)) ? database : dumpedDb;
+      this.parseDb(database, reqData, onmessage);
+    }
   }
   async parseDb(database, reqData, onmessage) {
     let messageSuccess = false;
@@ -32,7 +35,8 @@ export default class WebSocket {
         for (let callResTypeName of Object.keys(callResTypes)) {
           let respData = this.findKeyInObj(callResTypes[callResTypeName], reqData);
           if (respData) {
-            messageSuccess = await this.passMessageOn(reqData, respData, onmessage);
+            await this.passMessageOn(reqData, respData, onmessage);
+            messageSuccess = true;
           }
         }
       }
@@ -56,9 +60,6 @@ export default class WebSocket {
   delayedOnMessage(reqData, respData, onmessage, next) {
     return new Promise((r) => {
       setTimeout(() => {
-        if (this.readyState === 0) {
-          return;
-        }
         if (!this.isEmpty(next)) {
           this.addToResponseBuffer(next);
         }
@@ -69,23 +70,17 @@ export default class WebSocket {
     });
   }
   handleForget(reqData, onmessage) {
-    if ('forget_all' in reqData || ('subscribe' in reqData && reqData.subscribe === 0)) {
-      setTimeout(() => {
-        if (this.readyState === 0) {
-          return;
-        }
-        onmessage(JSON.stringify({
-          echo_req: {
-            req_id: reqData.req_id,
-            forget_all: 'ticks',
-          },
+    setTimeout(() => {
+      onmessage(JSON.stringify({
+        echo_req: {
           req_id: reqData.req_id,
-          forget_all: [],
-          msg_type: 'forget_all',
-        }));
-      }, this.delay);
-      return;
-    }
+          forget_all: 'ticks',
+        },
+        req_id: reqData.req_id,
+        forget_all: [],
+        msg_type: 'forget_all',
+      }));
+    }, this.delay);
   }
   addToResponseBuffer(database) {
     this.bufferedResponse.push(database);

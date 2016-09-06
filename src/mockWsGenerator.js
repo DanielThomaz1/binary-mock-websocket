@@ -119,7 +119,7 @@ export default class MockWsGenerator {
   handleDataSharing(data) {
     if (data.msg_type === 'proposal') {
       this.sharedContext.contract = data.proposal;
-    } else if (data.msg_type === 'proposal' && !data.error) {
+    } else if (data.msg_type === 'buy' && !data.error) {
       if (data.buy.shortcode.indexOf('DIGITEVEN') >= 0) {
         this.sharedContext.evenPurchasedContract = data.buy.contract_id;
       } else {

@@ -1,10 +1,11 @@
+import _ from 'underscore';
 import dumpedDb from './database'; // eslint-disable-line import/no-unresolved
 
 export default class WebSocket {
   constructor(url) {
     this.delay = 10;
     this.url = url;
-    this.bufferedResponse = [];
+    this.bufferedResponse = {};
     this.queuedRequest = [];
     // providing ws interface
     this.readyState = 0;
@@ -43,7 +44,7 @@ export default class WebSocket {
     }
     if (!messageSuccess) {
       this.queuedRequest.push({
-				data: reqData,
+        data: reqData,
         onmessage,
       });
     }
@@ -83,7 +84,7 @@ export default class WebSocket {
     }, this.delay);
   }
   addToResponseBuffer(database) {
-    this.bufferedResponse.push(database);
+    this.bufferedResponse = database;
     if (!this.isEmpty(this.queuedRequest)) {
       for (let req of this.queuedRequest) {
         this.getResponse(req.data, req.onmessage);
@@ -92,8 +93,11 @@ export default class WebSocket {
     }
   }
   getResponseFromBuffer(reqData) {
-    let index = this.bufferedResponse.findIndex((_data) => !this.isEmpty(this.findDataInBuffer(reqData, _data)));
-    return (index < 0) ? null : this.bufferedResponse[index];
+    if (!this.isEmpty(this.findDataInBuffer(reqData, this.bufferedResponse))) {
+      return this.bufferedResponse;
+    }
+    this.bufferedResponse = {};
+    return null;
   }
   findDataInBuffer(reqData, database) {
     for (let callName of Object.keys(database)) {
@@ -121,7 +125,7 @@ export default class WebSocket {
   }
   findKeyInObj(obj1, obj2) {
     for (let key of Object.keys(obj1)) {
-      if (JSON.stringify(this.removeReqId(JSON.parse(key))) === JSON.stringify(this.removeReqId(obj2))) {
+      if (_.isEqual(this.removeReqId(JSON.parse(key)), this.removeReqId(obj2))) {
         return obj1[key];
       }
     }

@@ -13,29 +13,9 @@ export default class MockWsGenerator {
   constructor(calls) {
     this.calls = calls;
     this.sharedContext = {};
-    this.reqRespMap = {};
     this.api = new LiveApi({
       websocket: SpyWebSocket,
     });
-    this.api.send = (json) => {
-      const reqId = Math.floor((Math.random() * 1e15));
-      return this.api.sendRaw(this.reqRespMap[reqId] = {
-				req_id: reqId,
-        ...json,
-      });
-    };
-    let originalOnMessage = this.api.socket._events.message; // eslint-disable-line no-underscore-dangle
-    this.api.socket._events.message = (rawData, flags) => { // eslint-disable-line no-underscore-dangle
-      let data = JSON.parse(rawData);
-      if (!(data.req_id in this.reqRespMap)) {
-        originalOnMessage(rawData, flags);
-        return;
-      }
-      data.echo_req = this.reqRespMap[data.req_id];
-      this.replaceSensitiveData(data);
-      observer.emit('data.' + data.msg_type, data);
-      originalOnMessage(rawData, flags);
-    };
   }
   async generate() {
     await this.iterateCalls(this.calls, this.api.socket.respDatabase);
@@ -57,16 +37,20 @@ export default class MockWsGenerator {
 					logger.log(callDefName);
           if (callResTypeName === 'subscriptions') {
             if (callName === 'history') {
+              this.api.events.on((callResTypeName === 'errors')? 'error': 'history', (ah) => observer.emit('data.history', ah));
               let data = await new Promise((r) => observer.register('data.history', r, true));
               this.handleDataSharing(data);
               respDatabase[callName][callResTypeName][this.getKeyFromReq(data)] = {
                 data: [data],
               };
+              this.api.events.on((callResTypeName === 'errors')? 'error': 'tick', (at) => observer.emit('data.tick', at));
               await this.observeSubscriptions('data.tick', respDatabase, callDef);
             } else {
+              this.api.events.on((callResTypeName === 'errors')? 'error': callName, (an) => observer.emit('data.' + callName, an));
               await this.observeSubscriptions('data.' + callName, respDatabase, callDef);
             }
           } else {
+            this.api.events.on((callResTypeName === 'errors')? 'error': callName, (ano) => observer.emit('data.' + callName, ano));
             let data = await new Promise((r) => observer.register('data.' + callName, r, true));
             this.handleDataSharing(data);
             let key = this.getKeyFromReq(data);
@@ -97,7 +81,6 @@ export default class MockWsGenerator {
         let finished = this.handleSubscriptionLimits(data, rd.data, callDef);
         if (finished) {
           observer.unregister(event, listener);
-          delete this.reqRespMap[data.req_id];
           r(rd);
         }
       };
@@ -136,6 +119,6 @@ export default class MockWsGenerator {
     }
   }
   getKeyFromReq(data) {
-    return JSON.stringify(this.reqRespMap[data.req_id]);
+    return JSON.stringify(data.echo_req);
   }
 }

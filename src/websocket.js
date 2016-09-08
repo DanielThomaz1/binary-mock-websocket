@@ -5,8 +5,7 @@ export default class WebSocket {
   constructor(url) {
     this.delay = 10;
     this.url = url;
-    this.bufferedResponse = {};
-    this.queuedRequest = [];
+    this.bufferedResponses = [];
     // providing ws interface
     this.readyState = 0;
     this.onopen = null;
@@ -23,13 +22,12 @@ export default class WebSocket {
     if ('forget_all' in reqData || ('subscribe' in reqData && reqData.subscribe === 0)) {
       this.handleForget(reqData, onmessage);
     } else {
-      let database = this.getResponseFromBuffer(reqData);
+      let database = this.findDataInBuffer(reqData);
       database = (!this.isEmpty(database)) ? database : dumpedDb;
       this.parseDb(database, reqData, onmessage);
     }
   }
   async parseDb(database, reqData, onmessage) {
-    let messageSuccess = false;
     for (let callName of Object.keys(database)) {
       if (callName in reqData || (callName === 'history' && 'ticks_history' in reqData)) {
         let callResTypes = database[callName];
@@ -37,33 +35,40 @@ export default class WebSocket {
           let respData = this.findKeyInObj(callResTypes[callResTypeName], reqData);
           if (respData) {
             await this.passMessageOn(reqData, respData, onmessage);
-            messageSuccess = true;
           }
         }
       }
     }
-    if (!messageSuccess) {
-      this.queuedRequest.push({
-        data: reqData,
-        onmessage,
-      });
-    }
   }
   async passMessageOn(reqData, respData, onmessage) {
+    if (!this.isEmpty(respData.next)) {
+      this.bufferedResponses.push(respData.next);
+    }
     if (reqData.subscribe) {
-      for (let rd of respData.data) {
-        await this.delayedOnMessage(reqData, rd, onmessage, respData.next);
+      if ('ticks_history' in reqData) {
+        let history = respData.data[0];
+        let firstTick = respData.data[1];
+        await this.delayedOnMessage(reqData, history, onmessage);
+        for (let i = 0; i < 60; i++) {
+          let newTick = {
+            ...firstTick,
+          };
+          newTick.tick.epoch = `${+firstTick.tick.epoch + (i * 2)}`;
+          newTick.tick.quote = `${+firstTick.tick.quote + (i * 0.1)}`;
+          await this.delayedOnMessage(reqData, newTick, onmessage);
+        }
+      } else {
+        for (let rd of respData.data) {
+          await this.delayedOnMessage(reqData, rd, onmessage);
+        }
       }
     } else {
-      await this.delayedOnMessage(reqData, respData.data, onmessage, respData.next);
+      await this.delayedOnMessage(reqData, respData.data, onmessage);
     }
   }
-  delayedOnMessage(reqData, respData, onmessage, next) {
+  delayedOnMessage(reqData, respData, onmessage) {
     return new Promise((r) => {
       setTimeout(() => {
-        if (!this.isEmpty(next)) {
-          this.addToResponseBuffer(next);
-        }
         respData.echo_req.req_id = respData.req_id = reqData.req_id;
         onmessage(JSON.stringify(respData));
         r();
@@ -83,35 +88,22 @@ export default class WebSocket {
       }));
     }, this.delay);
   }
-  addToResponseBuffer(database) {
-    this.bufferedResponse = database;
-    if (!this.isEmpty(this.queuedRequest)) {
-      for (let req of this.queuedRequest) {
-        this.getResponse(req.data, req.onmessage);
-      }
-      this.queuedRequest = [];
-    }
-  }
-  getResponseFromBuffer(reqData) {
-    if (!this.isEmpty(this.findDataInBuffer(reqData, this.bufferedResponse))) {
-      return this.bufferedResponse;
-    }
-    this.bufferedResponse = {};
-    return null;
-  }
-  findDataInBuffer(reqData, database) {
-    for (let callName of Object.keys(database)) {
-      if ((callName === 'history' && 'ticks_history' in reqData) || callName in reqData) {
-        let callResTypes = database[callName];
-        for (let callResTypeName of Object.keys(callResTypes)) {
-          let respData = this.findKeyInObj(callResTypes[callResTypeName], reqData);
-          if (respData) {
-            return database;
+  findDataInBuffer(reqData) {
+    let result = null;
+    for (let database of this.bufferedResponses) {
+      for (let callName of Object.keys(database)) {
+        if ((callName === 'history' && 'ticks_history' in reqData) || callName in reqData) {
+          let callResTypes = database[callName];
+          for (let callResTypeName of Object.keys(callResTypes)) {
+            let respData = this.findKeyInObj(callResTypes[callResTypeName], reqData);
+            if (respData) {
+              result = database;
+            }
           }
         }
       }
     }
-    return null;
+    return result;
   }
   removeReqId(_data) {
     let data = {

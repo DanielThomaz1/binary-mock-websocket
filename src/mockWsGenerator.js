@@ -35,15 +35,16 @@ export default class MockWsGenerator {
           let logger = console;
           logger.log(callDefName);
           if (callResTypeName === 'subscriptions') {
-            if (callName === 'history') {
-              this.api.events.on((callResTypeName === 'errors') ? 'error' : 'history', (ah) => observer.emit('data.history', ah));
-              let data = await new Promise((r) => observer.register('data.history', r, true));
+            if (['history', 'candles'].indexOf(callName) >= 0) {
+              const second = (callName === 'history') ? 'tick' : 'ohlc';
+              this.api.events.on((callResTypeName === 'errors') ? 'error' : callName, (ah) => observer.emit('data.' + callName, ah));
+              let data = await new Promise((r) => observer.register('data.' + callName, r, true));
               this.handleDataSharing(data);
               respDatabase[callName][callResTypeName][this.getKeyFromReq(data)] = {
                 data: [data],
               };
-              this.api.events.on((callResTypeName === 'errors') ? 'error' : 'tick', (at) => observer.emit('data.tick', at));
-              await this.observeSubscriptions('data.tick', respDatabase, callDef);
+              this.api.events.on((callResTypeName === 'errors') ? 'error' : second, (at) => observer.emit('data.' + second, at));
+              await this.observeSubscriptions('data.' + second, respDatabase, callDef);
             } else {
               this.api.events.on((callResTypeName === 'errors') ? 'error' : callName, (an) => observer.emit('data.' + callName, an));
               await this.observeSubscriptions('data.' + callName, respDatabase, callDef);
@@ -68,7 +69,14 @@ export default class MockWsGenerator {
       let listener = (resp) => {
         let data = resp;
         let key = this.getKeyFromReq(data);
-        let messageType = (data.msg_type === 'tick') ? 'history' : data.msg_type;
+        let messageType;
+        if (data.msg_type === 'tick') {
+          messageType = 'history';
+        } else if (data.msg_type === 'ohlc') {
+          messageType = 'candles';
+        } else {
+          messageType = data.msg_type;
+        }
         let resps = respDatabase[messageType].subscriptions;
         if (!(key in resps)) {
           resps[key] = {
@@ -118,8 +126,6 @@ export default class MockWsGenerator {
     }
   }
   getKeyFromReq(data) {
-    if (data.req_id in this.reqIdToReq) {
-      return this.reqIdToReq[data.req_id];
-    }
+    return this.reqIdToReq[data.req_id];
   }
 }

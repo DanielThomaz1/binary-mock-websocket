@@ -1,29 +1,26 @@
 import 'babel-polyfill';
-var File = require('vinyl');
-var through = require('through2');
-var fs = require('fs');
+import fs from 'fs';
+import File from 'vinyl';
+import path from 'path';
+import through from 'through2';
 import MockWsGenerator from './mockWsGenerator';
 
-module.exports = function() {
-	return through.obj(function(callFile, encoding, callback) {
-		var mock = new MockWsGenerator(require(callFile.path));
-		var throughObj = this;
-		mock.generate().then(function(output){
-			throughObj.push(new File({
-				cwd: __dirname,
-				base: __dirname,
-				path: __dirname + '/database.js',
-				contents: new Buffer(output)
-			}));
-			var data = fs.readFileSync(__dirname + '/websocket.js');
-			throughObj.push(new File({
-				cwd: __dirname,
-				base: __dirname,
-				path: __dirname + '/websocket.js',
-				contents: new Buffer(data)
-			}));
-			callback();
-		});
-	});
-};
-
+module.exports = through.obj(function throughFunc(callFile, encoding, callback) {
+  const mock = new MockWsGenerator(require(callFile.path)); // eslint-disable-line
+  mock.generate().then((output) => {
+    this.push(new File({
+      cwd: __dirname,
+      base: __dirname,
+      path: path.join(__dirname, 'database.js'),
+      contents: new Buffer(output),
+    }));
+    const data = fs.readFileSync(path.join(__dirname, 'websocket.js'));
+    this.push(new File({
+      cwd: __dirname,
+      base: __dirname,
+      path: path.join(__dirname, 'websocket.js'),
+      contents: new Buffer(data),
+    }));
+    callback();
+  });
+});

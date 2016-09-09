@@ -37,20 +37,24 @@ export default class MockWsGenerator {
           if (callResTypeName === 'subscriptions') {
             if (['history', 'candles'].indexOf(callName) >= 0) {
               const second = (callName === 'history') ? 'tick' : 'ohlc';
-              this.api.events.on((callResTypeName === 'errors') ? 'error' : callName, (ah) => observer.emit('data.' + callName, ah));
+              this.api.events.on((callResTypeName === 'errors') ? 'error' : callName,
+                (ah) => observer.emit('data.' + callName, ah));
               let data = await new Promise((r) => observer.register('data.' + callName, r, true));
               this.handleDataSharing(data);
               respDatabase[callName][callResTypeName][this.getKeyFromReq(data)] = {
                 data: [data],
               };
-              this.api.events.on((callResTypeName === 'errors') ? 'error' : second, (at) => observer.emit('data.' + second, at));
+              this.api.events.on((callResTypeName === 'errors') ? 'error' : second,
+                (at) => observer.emit('data.' + second, at));
               await this.observeSubscriptions('data.' + second, respDatabase, callDef);
             } else {
-              this.api.events.on((callResTypeName === 'errors') ? 'error' : callName, (an) => observer.emit('data.' + callName, an));
+              this.api.events.on((callResTypeName === 'errors') ? 'error' : callName,
+                (an) => observer.emit('data.' + callName, an));
               await this.observeSubscriptions('data.' + callName, respDatabase, callDef);
             }
           } else {
-            this.api.events.on((callResTypeName === 'errors') ? 'error' : callName, (ano) => observer.emit('data.' + callName, ano));
+            this.api.events.on((callResTypeName === 'errors') ? 'error' : callName,
+              (ano) => observer.emit('data.' + callName, ano));
             let data = await new Promise((r) => observer.register('data.' + callName, r, true));
             this.handleDataSharing(data);
             let key = this.getKeyFromReq(data);

@@ -1,3 +1,4 @@
+import 'babel-polyfill';
 import _ from 'underscore';
 import dumpedDb from './database'; // eslint-disable-line import/no-unresolved
 
@@ -132,12 +133,19 @@ export default class WebSocket {
     }
     let reqData = JSON.parse(rawData);
     this.getResponse(reqData, (receivedData) => {
-      this.onmessage({
-        data: receivedData,
-      });
+      if (this.readyState) {
+        this.onmessage({
+          data: receivedData,
+        });
+      }
     });
   }
   close() {
     this.readyState = 0;
+    this.bufferedResponses = [];
+    this.onopen = null;
+    this.onclose = null;
+    this.onerror = null;
+    this.onmessage = null;
   }
 }

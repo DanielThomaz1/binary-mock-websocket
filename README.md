@@ -11,11 +11,11 @@ npm install --save-dev binary-mock-websocket
 This gulp file will read the calls from calls.js and will create the websocket mock files in the dist folder.
 ```
 var gulp = require('gulp');
-var mock = require('binary-mock-websocket');
+var mockWebsocket = require('binary-mock-websocket');
 
 gulp.task('build', function() {
     return gulp.src('./calls.js', {read: false})
-        .pipe(mock())
+        .pipe(mockWebsocket)
         .pipe(gulp.dest('dist'));
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "binary-mock-websocket",
-  "version": "3.0.8",
+  "version": "4.0.0",
   "description": "Websocket mock creator for binary applications",
   "main": "lib/index.js",
   "babel": {

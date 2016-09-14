@@ -21,25 +21,25 @@ export default class MockWsGenerator {
     return 'module.exports = ' + JSON.stringify(this.respDatabase).replace("'", "\\'") + ';';
   }
   async iterateCalls(calls, respDatabase) {
-    for (let callName of Object.keys(calls)) {
-      let callResTypes = calls[callName];
-      for (let callResTypeName of Object.keys(callResTypes)) {
-        let callDefs = callResTypes[callResTypeName];
+    for (const callName of Object.keys(calls)) {
+      const callResTypes = calls[callName];
+      for (const callResTypeName of Object.keys(callResTypes)) {
+        const callDefs = callResTypes[callResTypeName];
         respDatabase[callName] = (!(callName in respDatabase)) ? {}
           : respDatabase[callName];
         respDatabase[callName][callResTypeName] = (!(callResTypeName in respDatabase[callName])) ? {}
           : respDatabase[callName][callResTypeName];
-        for (let callDefName of Object.keys(callDefs)) {
-          let callDef = callDefs[callDefName];
+        for (const callDefName of Object.keys(callDefs)) {
+          const callDef = callDefs[callDefName];
           callDef.func(this.api, this.sharedContext);
-          let logger = console;
+          const logger = console;
           logger.log(callDefName);
           if (callResTypeName === 'subscriptions') {
             if (['history', 'candles'].indexOf(callName) >= 0) {
               const second = (callName === 'history') ? 'tick' : 'ohlc';
               this.api.events.on((callResTypeName === 'errors') ? 'error' : callName,
                 (ah) => observer.emit('data.' + callName, ah));
-              let data = await new Promise((r) => observer.register('data.' + callName, r, true));
+              const data = await new Promise((r) => observer.register('data.' + callName, r, true));
               this.handleDataSharing(data);
               respDatabase[callName][callResTypeName][this.getKeyFromReq(data)] = {
                 data: [data],
@@ -55,10 +55,10 @@ export default class MockWsGenerator {
           } else {
             this.api.events.on((callResTypeName === 'errors') ? 'error' : callName,
               (ano) => observer.emit('data.' + callName, ano));
-            let data = await new Promise((r) => observer.register('data.' + callName, r, true));
+            const data = await new Promise((r) => observer.register('data.' + callName, r, true));
             this.handleDataSharing(data);
-            let key = this.getKeyFromReq(data);
-            let reqDef = respDatabase[callName][callResTypeName][key] = {
+            const key = this.getKeyFromReq(data);
+            const reqDef = respDatabase[callName][callResTypeName][key] = {
               data,
             };
             await this.iterateNext(callDef, reqDef);
@@ -69,10 +69,10 @@ export default class MockWsGenerator {
     return;
   }
   async observeSubscriptions(event, respDatabase, callDef) {
-    let reqDef = await new Promise((r) => {
-      let listener = (resp) => {
-        let data = resp;
-        let key = this.getKeyFromReq(data);
+    const reqDef = await new Promise((r) => {
+      const listener = (resp) => {
+        const data = resp;
+        const key = this.getKeyFromReq(data);
         let messageType;
         if (data.msg_type === 'tick') {
           messageType = 'history';
@@ -81,15 +81,15 @@ export default class MockWsGenerator {
         } else {
           messageType = data.msg_type;
         }
-        let resps = respDatabase[messageType].subscriptions;
+        const resps = respDatabase[messageType].subscriptions;
         if (!(key in resps)) {
           resps[key] = {
             data: [],
           };
         }
-        let rd = resps[key];
+        const rd = resps[key];
         this.handleDataSharing(data);
-        let finished = this.handleSubscriptionLimits(data, rd.data, callDef);
+        const finished = this.handleSubscriptionLimits(data, rd.data, callDef);
         if (finished) {
           observer.unregister(event, listener);
           r(rd);

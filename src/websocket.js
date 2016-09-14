@@ -29,11 +29,11 @@ export default class WebSocket {
     }
   }
   async parseDb(database, reqData, onmessage) {
-    for (let callName of Object.keys(database)) {
-      if (callName in reqData || (callName === 'history' && 'ticks_history' in reqData)) {
-        let callResTypes = database[callName];
-        for (let callResTypeName of Object.keys(callResTypes)) {
-          let respData = this.findKeyInObj(callResTypes[callResTypeName], reqData);
+    for (const callName of Object.keys(database)) {
+      if (callName in reqData || ((callName === 'candles' || callName === 'history') && 'ticks_history' in reqData)) {
+        const callResTypes = database[callName];
+        for (const callResTypeName of Object.keys(callResTypes)) {
+          const respData = this.findKeyInObj(callResTypes[callResTypeName], reqData);
           if (respData) {
             await this.passMessageOn(reqData, respData, onmessage);
           }
@@ -47,19 +47,23 @@ export default class WebSocket {
     }
     if (reqData.subscribe) {
       if ('ticks_history' in reqData) {
-        let history = respData.data[0];
-        let firstTick = respData.data[1];
-        await this.delayedOnMessage(reqData, history, onmessage);
+        await this.delayedOnMessage(reqData, respData.data[0], onmessage);
+        const first = respData.data[1];
         for (let i = 0; i < 60; i++) {
-          let newTick = {
-            ...firstTick,
+          const newTick = {
+            ...first,
           };
-          newTick.tick.epoch = `${+firstTick.tick.epoch + (i * 2)}`;
-          newTick.tick.quote = `${+firstTick.tick.quote + (i * 0.1)}`;
+          if ('ohlc' in first) {
+            newTick.ohlc.close = `${+first.ohlc.close + (i * 0.1)}`;
+            newTick.ohlc.epoch = `${+first.ohlc.epoch + (i * 2)}`;
+          } else {
+            newTick.tick.epoch = `${+first.tick.epoch + (i * 2)}`;
+            newTick.tick.quote = `${+first.tick.quote + (i * 0.1)}`;
+          }
           await this.delayedOnMessage(reqData, newTick, onmessage);
         }
       } else {
-        for (let rd of respData.data) {
+        for (const rd of respData.data) {
           await this.delayedOnMessage(reqData, rd, onmessage);
         }
       }
@@ -91,12 +95,12 @@ export default class WebSocket {
   }
   findDataInBuffer(reqData) {
     let result = null;
-    for (let database of this.bufferedResponses) {
-      for (let callName of Object.keys(database)) {
-        if ((callName === 'history' && 'ticks_history' in reqData) || callName in reqData) {
-          let callResTypes = database[callName];
-          for (let callResTypeName of Object.keys(callResTypes)) {
-            let respData = this.findKeyInObj(callResTypes[callResTypeName], reqData);
+    for (const database of this.bufferedResponses) {
+      for (const callName of Object.keys(database)) {
+        if (((callName === 'candles' || callName === 'history') && 'ticks_history' in reqData) || callName in reqData) {
+          const callResTypes = database[callName];
+          for (const callResTypeName of Object.keys(callResTypes)) {
+            const respData = this.findKeyInObj(callResTypes[callResTypeName], reqData);
             if (respData) {
               result = database;
             }
@@ -107,7 +111,7 @@ export default class WebSocket {
     return result;
   }
   removeReqId(_data) {
-    let data = {
+    const data = {
       ..._data,
     };
     delete data.req_id;
@@ -117,7 +121,7 @@ export default class WebSocket {
     return data;
   }
   findKeyInObj(obj1, obj2) {
-    for (let key of Object.keys(obj1)) {
+    for (const key of Object.keys(obj1)) {
       if (_.isEqual(this.removeReqId(JSON.parse(key)), this.removeReqId(obj2))) {
         return obj1[key];
       }
@@ -131,7 +135,7 @@ export default class WebSocket {
     if (this.readyState === 0) {
       return;
     }
-    let reqData = JSON.parse(rawData);
+    const reqData = JSON.parse(rawData);
     this.getResponse(reqData, (receivedData) => {
       if (this.readyState) {
         this.onmessage({
